@@ -5,15 +5,16 @@ const postUrl = 'http://2captcha.com/in.php';
 const getUrl = 'http://2captcha.com/res.php';
 
 class TwoCaptcha {
-    constructor(api_key) {
+    constructor(api_key, log) {
         this.api_key = api_key
+        this.log = log
     }
 
-    async submitCaptcha(sitekey, url) {
+    async submitCaptcha(sitekey, url, log) {
         var res = await fetch(`${postUrl}?key=${this.api_key}&method=userrecaptcha&googlekey=${sitekey}&pageurl=${url}&json=1`)
         var data = await res.json()
         if (data.status == 1) {
-            console.log('Captcha submitted, waiting for response')
+            this.log('Captcha submitted, waiting for response')
             await sleep(15000)
             return this.checkCaptcha(data.request)
         }
@@ -24,7 +25,7 @@ class TwoCaptcha {
                 return this.submitCaptcha(sitekey, url)
             }
             else {
-                console.log('Error submitting captcha', data)
+                this.log('Error submitting captcha', data)
             }
         }
 
@@ -35,7 +36,7 @@ class TwoCaptcha {
         var res = await fetch(`${getUrl}?key=${this.api_key}&action=get&id=${id}`)
         var token = await res.text()
         if (token == 'CAPCHA_NOT_READY') {
-            console.log('Captcha not ready, sleeping 5s')
+            this.log('Captcha not ready, sleeping 5s')
             await sleep(5000)
             return this.checkCaptcha(id)
         }

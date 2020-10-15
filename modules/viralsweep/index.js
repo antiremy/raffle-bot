@@ -2,8 +2,8 @@ const fetch = require('node-fetch');
 const cheerio = require('cheerio');
 const { URLSearchParams } = require('url');
 const random_name = require('node-random-name');
+const chalk = require('chalk');
 
-var TwoCaptcha = require('../2captcha');
 const Raffle = require('../raffle');
 
 const VIRALSWEEP_SITEKEY = '6LdhYxYUAAAAAAcorjMQeKmZb6W48bqb0ZEDRPCl'
@@ -15,16 +15,21 @@ class ViralSweep extends Raffle {
     }
 
     async run() {
-        console.log(`[${this.id}]`, 'Starting entry')
+        this.log( 'Starting entry')
         try {
             var [params, entryUrl] = await this.getForm()
         
             var entry = await this.submitEntry(params, entryUrl)
 
-            console.log(`[${this.id}]`,'Successfully entered', entry)
+            if (entry.success === 1 && entry.eid_hash) {
+                this.log(chalk.green('Successfully entered'))
+            }
+            else {
+                this.log(chalk.red('Error entering'), entry)
+            }
         }    
         catch(e) {
-            console.log(`[${this.id}]`,'Error entering raffle:', e)
+            this.log(chalk.red('Error entering raffle:', e))
         }
         return
     }
@@ -78,7 +83,7 @@ class ViralSweep extends Raffle {
             }
         }
         else {
-            console.log(`[${this.id}]`,entryPage.status)
+            this.log(entryPage.status)
         }
 
     
@@ -100,10 +105,10 @@ class ViralSweep extends Raffle {
         form.tv = await this.getToken(form.ti, pid.split('-')[1], entryUrl)
     
         const captchaToken = await this.solver.submitCaptcha(VIRALSWEEP_SITEKEY, entryUrl)
-        console.log(`[${this.id}]`, 'Got token', captchaToken)
+        this.log('Got token')
         form['g-recaptcha-response'] = captchaToken
     
-        // console.log(form)
+        // this.log(form)
     
         const params = new URLSearchParams()
     
